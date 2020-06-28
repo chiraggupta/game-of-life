@@ -2,4 +2,4 @@
 
 Built using [Preact](https://preactjs.com) and [HTM](https://github.com/developit/htm)
 
-http://chiraggupta.github.io/game-of-life/
+[gameoflife.chiraggupta.com](https://gameoflife.chiraggupta.com)
