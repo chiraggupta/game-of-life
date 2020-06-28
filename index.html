@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Game of Life</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body {
+      margin: 0;
+      background-color: darkslateblue;
+    }
+
+    .column {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .row {
+      display: flex;
+      flex-direction: row;
+    }
+
+    .live-cell {
+      width: 4vmin;
+      height: 4vmin;
+      background-color: lightgreen;
+    }
+
+    .dead-cell {
+      width: 4vmin;
+      height: 4vmin;
+      background-color: darkslateblue;
+    }
+  </style>
+</head>
+
+<body>
+  <script type="module">
+    import {html, render, useEffect, useState} from 'https://unpkg.com/htm/preact/standalone.module.js'
+
+    const height = document.documentElement.clientHeight;
+    const width = document.documentElement.clientWidth;
+    const portrait = height > width;
+    const cellSize = portrait ? width / 25 : height / 25;
+
+    const maxRows = Math.floor(height / cellSize);
+    const maxColumns = Math.floor(width / cellSize);
+
+    const getRandomSeed = () => {
+      const seedPattern = Array(maxRows);
+      for (let rowIndex = 0; rowIndex < maxRows; rowIndex++) {
+        const newRow = Array(maxColumns);
+        seedPattern[rowIndex] = newRow;
+        for (let columnIndex = 0; columnIndex < maxColumns; columnIndex++) {
+          seedPattern[rowIndex][columnIndex] = Math.random(1) > 0.5;
+        }
+      }
+
+      return seedPattern;
+    }
+
+    const getLiveNeigbourCount = (pattern, cellRow, cellColumn) => {
+      let count = 0;
+      for (let rowIndex = cellRow - 1; rowIndex <= cellRow + 1; rowIndex++) {
+        for (let columnIndex = cellColumn - 1; columnIndex <= cellColumn + 1; columnIndex++) {
+          if (
+            rowIndex < 0 || columnIndex < 0 ||
+            rowIndex >= maxRows || columnIndex >= maxColumns ||
+            (rowIndex == cellRow && columnIndex == cellColumn)
+          ) {
+            continue;
+          }
+          count += pattern[rowIndex][columnIndex] ? 1 : 0;
+        }
+      }
+
+      return count;
+    };
+
+    const getNextGeneration = (pattern) => {
+      const next = Array(maxRows);
+      for (let rowIndex = 0; rowIndex < maxRows; rowIndex++) {
+        const row = Array(maxColumns);
+        next[rowIndex] = row;
+        for (let columnIndex = 0; columnIndex < maxColumns; columnIndex++) {
+          const neighbourCount = getLiveNeigbourCount(pattern, rowIndex, columnIndex)
+          const alive = pattern[rowIndex][columnIndex];
+          if (alive && (neighbourCount === 2 || neighbourCount === 3)) {
+            next[rowIndex][columnIndex] = true;
+          } else if (!alive && neighbourCount === 3) {
+            next[rowIndex][columnIndex] = true;
+          } else {
+            next[rowIndex][columnIndex] = false;
+          }
+        }
+      }
+      return next;
+    };
+
+    const Grid = ({pattern}) => (
+      html`<div className="column">
+        ${pattern.map((row, rowIndex) =>
+        html`<div key="${rowIndex}" className="row">
+          ${row.map((cellAlive, columnIndex) =>
+          html`<div key="{columnIndex}" className="${cellAlive ? 'live-cell' : 'dead-cell'}" />`
+        )}
+        </div>`
+      )}
+      </div >`
+    );
+
+    function GridContainer() {
+      const [state, setState] = useState({count: 0, pattern: getRandomSeed()});
+
+      // console.log(`Turn count: ${state.count}`);
+      useEffect(() => {
+        setInterval(() => {
+          setState(({count, pattern}) => ({
+            count: count + 1,
+            pattern: getNextGeneration(pattern),
+          }));
+        }, 100);
+      }, []);
+
+      return html`<${Grid} pattern=${state.pattern} />`;
+    };
+
+    render(html`<${GridContainer} />`, document.body);
+  </script>
+</body>
+
+</html>
